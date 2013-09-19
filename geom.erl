@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
-%%% @doc 'Etudes for Erlang' exercise. Simple module and function.
+%%% @doc 'Etudes for Erlang' exercises. Simple module and function.
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
@@ -23,5 +23,7 @@ area(Shape, A, B) when A >= 0, B >= 0 ->
     case Shape of
         rectangle   -> A * B;
         triangle    -> A * B / 2.0;
-        ellipse     -> A * B * math:pi()
-    end.
+        ellipse     -> A * B * math:pi();
+        _   -> 0
+    end;
+area(_Shape, _A, _B) -> 0.
