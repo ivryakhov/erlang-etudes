@@ -8,7 +8,7 @@
 -module(powers).
 -export([raise/2]).
 -author('ivryakhov').
--revision('Revision: 0.1').
+-revision('Revision: 0.2').
 -created('Date: 2013/10/07').
 
 %%-------------------------------------------------------------------
@@ -17,6 +17,14 @@
 %% @end
 %%-------------------------------------------------------------------
 raise(_X, 0) -> 1;
-raise(X, 1) -> X;
-raise(X, N) when N > 0 -> X * raise(X, N - 1);
+raise(X, N) when N > 0 -> raise(X, N, 1);
 raise(X, N) when N < 0 -> 1.0 / raise(X, -N).
+
+%%-------------------------------------------------------------------
+%% @doc helper function for raise/2 function for tail recursive evaluating
+%%      of X^N with iterated accumulator
+%% @spec raise(X::number(), N::integer(), Accumulator:integer()}) -> number()
+%% @end
+%%-------------------------------------------------------------------
+raise(_X, 0, Accumulator) -> Accumulator;
+raise(X, N, Accumulator) -> raise(X, N-1, X * Accumulator).
