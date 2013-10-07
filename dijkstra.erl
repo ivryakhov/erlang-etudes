@@ -1,10 +1,10 @@
 %%%-------------------------------------------------------------------
-%%%%%% @author Ryakhov Ivan <ivryakhov@gmail.com>
-%%%%%% @copyright 2013
-%%%%%% @doc 'Etudes for Erlang' exercises. Simple module and function.
-%%%%%%       [http://chimera.labs.oreilly.com/books/1234000000726]
-%%%%%% @end
-%%%%%%-------------------------------------------------------------------
+%%% @author Ryakhov Ivan <ivryakhov@gmail.com>
+%%% @copyright 2013
+%%% @doc 'Etudes for Erlang' exercises. Etude 4-2: Recursion
+%%%       [http://chimera.labs.oreilly.com/books/1234000000726]
+%%% @end
+%%%-------------------------------------------------------------------
 -module(dijkstra).
 -export([gcd/2]).
 -author('ivryakhov').
@@ -13,7 +13,7 @@
 
 %%-------------------------------------------------------------------
 %% @doc finds the greatest common divisor (GCD) of two integers
-%% @spec area(M::integer(), B::integer()}) -> integer()
+%% @spec gcd(M::integer(), B::integer()}) -> integer()
 %% @end
 %%-------------------------------------------------------------------
 gcd(M, N) when M == N -> M;
