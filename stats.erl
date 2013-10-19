@@ -1,16 +1,21 @@
 %%%-------------------------------------------------------------------
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
-%%% @doc 'Etudes for Erlang' exercises. Chapter 6. Lists
+%%% @doc 'Etudes for Erlang' exercises. Chapter 6. Lists, 
+%%%         Étude 7-3: Using lists:foldl/3
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
 -module(stats).
--export([minimum/1, maximum/1, range/1]).
+-export([minimum/1, maximum/1, range/1, mean/1, stdv/1]).
 -revision('Revision: 0.1').
 -created('Date: 2013/10/15').
 -modified('Date: 2013/10/16').
 -created_by('ivryakhov').
+
+%%-------------------------------------------------------------------
+%% API functions
+%%-------------------------------------------------------------------
 
 %%-------------------------------------------------------------------
 %% @doc Takes a list of numbers and return the minumim number
@@ -36,6 +41,30 @@ maximum([H|T]) ->
 %%-------------------------------------------------------------------
 range(ListOfNumbers) ->
     [minimum(ListOfNumbers), maximum(ListOfNumbers)].
+
+%%-------------------------------------------------------------------
+%% @doc Calculates the mean for lits of numbers
+%% @spec mean(list(number()) -> float()
+%% @end
+%%-------------------------------------------------------------------
+mean(NumbersList) ->
+    lists:foldl(fun(X, Sum) -> X + Sum end, 0, NumbersList) / length(NumbersList).
+
+%%-------------------------------------------------------------------
+%% @doc Calculates the standart deviation for lits of numbers
+%% @spec stdv(list(number()) -> float()
+%% @end
+%%-------------------------------------------------------------------
+stdv(NumbersList) ->
+    N = length(NumbersList),
+    {Sum, SqrSum} = lists:foldl(fun(X, {SumIter, SqrSumIter}) -> {X + SumIter, X * X + SqrSumIter} end,
+                                {0, 0}, NumbersList),
+    math:sqrt((SqrSum * N - Sum * Sum) / (N * (N - 1))).
+    
+
+%%-------------------------------------------------------------------
+%% Private functions
+%%-------------------------------------------------------------------
 
 %%-------------------------------------------------------------------
 %% @doc Helper function that takes a list of numbers and return the
