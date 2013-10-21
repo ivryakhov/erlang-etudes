@@ -10,7 +10,7 @@
 -export([date_parts/1, julian/1]).
 -revision('Revision: 0.2').
 -created('Date: 2013/10/14').
--modified('Date: 2013/10/16').
+-modified('Date: 2013/10/22').
 -created_by('ivryakhov').
 
 %%-------------------------------------------------------------------
@@ -28,7 +28,7 @@ julian(Date) ->
 %% @doc Helper function for julian/1 that takes 4 arguments:
 %%      month, day, list of days per month and total days count.
 %%      Return the number of day in a year.
-%% @spec julian(integer(), integer, list(integer()), integer()) -> integer()
+%% @spec julian(integer(), integer(), list(integer())) -> integer()
 %% @end
 %%-------------------------------------------------------------------
 julian(Month, Day, DaysPerMonth) when Month < 13 ->
