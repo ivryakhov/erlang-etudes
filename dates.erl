@@ -1,7 +1,8 @@
 %%%-------------------------------------------------------------------
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
-%%% @doc 'Etudes for Erlang' exercises. Etude 5-2: Using the re Module
+%%% @doc 'Etudes for Erlang' exercises. Etude 5-2: Using the re Module,
+%%%         Etude 7-4: Using lists:split/2
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
@@ -21,7 +22,7 @@
 julian(Date) ->
     [Year, Month, Day ] = date_parts(Date),
     DaysPerMonth = [31, days_in_feb(Year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31],
-    julian(Month, Day, DaysPerMonth, 0).
+    julian(Month, Day, DaysPerMonth).
 
 %%-------------------------------------------------------------------
 %% @doc Helper function for julian/1 that takes 4 arguments:
@@ -30,11 +31,11 @@ julian(Date) ->
 %% @spec julian(integer(), integer, list(integer()), integer()) -> integer()
 %% @end
 %%-------------------------------------------------------------------
-julian(1, Day, _, Total) ->
-    Day + Total;
-julian(Month, Day, [H|T], Total) when Month < 13 ->
-    julian(Month - 1, Day, T, Total + H);
-julian(_, _, _, _) ->
+julian(Month, Day, DaysPerMonth) when Month < 13 ->
+    { MonthsUntilCurrent , _OtherMonths } = lists:split(Month - 1, DaysPerMonth),
+    lists:foldl(fun(X, Sum) -> X + Sum end, 0, MonthsUntilCurrent) + Day;
+
+julian(_, _, _) ->
     io:format("Wrong input data~n").
 
 %%-------------------------------------------------------------------
