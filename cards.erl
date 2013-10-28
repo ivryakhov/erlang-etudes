@@ -190,6 +190,7 @@ spawning_players([CurPlayer|Others], Deck, NumCards, Players) ->
 find_winner([], _BestCard, Winners) -> Winners;
 find_winner([CurPlayerCard | RestOfPlayers], BestCard, Winners) ->
     {Name, {Rank, _Suite}} = CurPlayerCard,
+    io:format("IVAN Rank is: ~p~n", [Rank]),
     RankInt = convert_rank_to_int(is_integer(Rank), Rank),
     if
         RankInt > BestCard ->
@@ -225,7 +226,7 @@ convert_rank_to_int(false, Rank) ->
 %%-------------------------------------------------------------------
 make_deck() ->
     Suits = ["Clubs", "Diamonds", "Hearts", "Spades"],
-    Ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"],
+    Ranks = ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"],
     [{Rank, Suit} || Rank <- Ranks, Suit <- Suits].
 
 %%-------------------------------------------------------------------
