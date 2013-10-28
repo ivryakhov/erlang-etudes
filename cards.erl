@@ -190,7 +190,6 @@ spawning_players([CurPlayer|Others], Deck, NumCards, Players) ->
 find_winner([], _BestCard, Winners) -> Winners;
 find_winner([CurPlayerCard | RestOfPlayers], BestCard, Winners) ->
     {Name, {Rank, _Suite}} = CurPlayerCard,
-    io:format("IVAN Rank is: ~p~n", [Rank]),
     RankInt = convert_rank_to_int(is_integer(Rank), Rank),
     if
         RankInt > BestCard ->
