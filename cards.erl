@@ -2,22 +2,51 @@
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
 %%% @doc 'Etudes for Erlang' exercises. Etude 7-5: Multiple Generators 
-%%%         in List Comprehensions, Etude 7-6: Explaining an Algorithm
+%%%         in List Comprehensions, Etude 7-6: Explaining an Algorithm,
+%%%         Etude 8-1: Using Processes to Simulate a Card Game
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
 -module(cards).
 -export([start_the_game/0, dealer/3, player/2]).
--revision('Revision: 0.3').
+-revision('Revision: 0.4').
 -created('Date: 2013/10/22').
--modified('Date: 2013/10/27').
+-modified('Date: 2013/10/28').
 -created_by('ivryakhov').
 
+%%-------------------------------------------------------------------
+%% @doc Starts the game with variuos players number that less than number
+%%      of cards in deck of course. Players names and it's number are
+%%      defined in PlayersNames list.
+%% @spec start_the_game() -> atom()
+%% @end
+%%-------------------------------------------------------------------
 start_the_game() ->
     PlayersNames = ["Andrea", "Bertram", "Bill", "Alice"],
     Dealer = spawn(cards, dealer, [[], [], []]),
     Dealer ! {start_the_game, PlayersNames}.
 
+%%-------------------------------------------------------------------
+%% @doc The agent that process the game. It controls the state of the game,
+%%      comminucation with players, cards assigment and game completion.
+%%      It receives control messages:
+%%          {start_the_game, PlayersNames} -- to start the game with list of
+%%                  players names. Denerates the deck, split it for some parts
+%%                  that is number of players and spawn the player processes.
+%%          {pre_battle} -- check the pile and decides if it is battle or war,
+%%                  sends the message to give the number of cards to each player
+%%                  depends of round type (battle of war)
+%%          {awaiting_battle} -- waiting cards from each player. If some player do
+%%                  not have any more cards, sent message to him to left the game.
+%%                  Starting cards checking when all cards received from all players
+%%                  with non-empty cards list.
+%%          {check_cards} -- to check cards and define the winner by comparise of 
+%%                  bottom cards. If winner is one, send message to him to get pile.
+%%                  It there are some winners, it is a war, going to pre_battle stage.
+%%                  If there is only one player, he is the winner of the game.
+%% @spec dealer(list(tuple()), list(tuple(tuple())), list(tuple())) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 dealer(Pile, BottomCards, Players) ->
     Dealer = self(),
     receive
@@ -93,6 +122,19 @@ dealer(Pile, BottomCards, Players) ->
 
     end.
 
+%%-------------------------------------------------------------------
+%% @doc player process that contolrs a behaviour of players.
+%%      Received messages:
+%%          {start_the_game} -- to write a message with one's name
+%%              and cards in hands.
+%%          {give_me_cards} -- to get the number (CardsNumber) of cards
+%%              from hands and get it ti dealer.
+%%          {take_your_cards} -- to get all cards from pile in case of
+%%              this player is winner.
+%%          {left_the_game} -- to left the game and finish one's process
+%% @spec player(string(), list(tuple())) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 player(Name, Cards) ->
     receive
         {start_the_game} ->
@@ -124,6 +166,13 @@ player(Name, Cards) ->
             io:format("~s: Im leaving the game. Bye.~n", [Name])
     end.
 
+%%-------------------------------------------------------------------
+%% @doc spawns the number of players processes. Each player should take
+%%      the number of curds to one's hand. Returns the list of players
+%%      with one's names and process id.
+%% @spec spawning_players(list(string()), list(tuple()), integer(), list(tuple())) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 spawning_players([], _, _, PlayersId) ->
     PlayersId;
 spawning_players([CurPlayer|Others], Deck, NumCards, Players) ->
@@ -132,6 +181,12 @@ spawning_players([CurPlayer|Others], Deck, NumCards, Players) ->
     CurPlayerId ! {start_the_game},
     spawning_players(Others, RestOfDeck, NumCards, Players ++ [{CurPlayer, CurPlayerId}]).
 
+%%-------------------------------------------------------------------
+%% @doc comparise the cards from players by rank. The best rank defines the winner.
+%%      If some players have a cards with equal rank, so there are some winners.
+%% @spec find_winner(list(tuple()), tuple(), list(tuple())) -> list(tuple())
+%% @end
+%%-------------------------------------------------------------------
 find_winner([], _BestCard, Winners) -> Winners;
 find_winner([CurPlayerCard | RestOfPlayers], BestCard, Winners) ->
     {Name, {Rank, _Suite}} = CurPlayerCard,
@@ -149,6 +204,11 @@ find_winner([CurPlayerCard | RestOfPlayers], BestCard, Winners) ->
     end,
     find_winner(RestOfPlayers, UpdateBestCard, UpdateWinners).
     
+%%-------------------------------------------------------------------
+%% @doc convers a rank of card to integer to help to comparise it with others
+%% @spec convert_rank_to_int(boolean(), integer()/string()) -> integer()
+%% @end
+%%-------------------------------------------------------------------
 convert_rank_to_int(true,  Rank) -> Rank;
 convert_rank_to_int(false, Rank) ->
     case hd(Rank) of
@@ -158,8 +218,6 @@ convert_rank_to_int(false, Rank) ->
         $A -> 14
     end.
     
-
-
 %%-------------------------------------------------------------------
 %% @doc Generates a deck of cards as a list 52 tuples
 %% @spec make_deck() -> list(tuple(string()|integer(), string()))
@@ -167,8 +225,7 @@ convert_rank_to_int(false, Rank) ->
 %%-------------------------------------------------------------------
 make_deck() ->
     Suits = ["Clubs", "Diamonds", "Hearts", "Spades"],
-    %Ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"],
-    Ranks = ["A", 2, 3, 4],
+    Ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"],
     [{Rank, Suit} || Rank <- Ranks, Suit <- Suits].
 
 %%-------------------------------------------------------------------
