@@ -2,15 +2,15 @@
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
 %%% @doc 'Etudes for Erlang' exercises. Chapter 6. Lists, 
-%%%         Étude 7-3: Using lists:foldl/3
+%%%         Etude 7-3: Using lists:foldl/3, Etude 9-1: try and catch
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
 -module(stats).
 -export([minimum/1, maximum/1, range/1, mean/1, stdv/1]).
--revision('Revision: 0.1').
+-revision('Revision: 0.2').
 -created('Date: 2013/10/15').
--modified('Date: 2013/10/16').
+-modified('Date: 2013/10/28').
 -created_by('ivryakhov').
 
 %%-------------------------------------------------------------------
@@ -22,6 +22,8 @@
 %% @spec minimum(list(number()) -> number()
 %% @end
 %%-------------------------------------------------------------------
+minimum([]) ->
+    {error,badarg};
 minimum([H|T]) ->
     extrem(T, H, min).
 
@@ -48,7 +50,10 @@ range(ListOfNumbers) ->
 %% @end
 %%-------------------------------------------------------------------
 mean(NumbersList) ->
-    lists:foldl(fun(X, Sum) -> X + Sum end, 0, NumbersList) / length(NumbersList).
+    try lists:foldl(fun(X, Sum) -> X + Sum end, 0, NumbersList) / length(NumbersList)
+    catch
+        error:Error -> {error, Error}
+    end.
 
 %%-------------------------------------------------------------------
 %% @doc Calculates the standart deviation for lits of numbers
@@ -56,10 +61,14 @@ mean(NumbersList) ->
 %% @end
 %%-------------------------------------------------------------------
 stdv(NumbersList) ->
-    N = length(NumbersList),
-    {Sum, SqrSum} = lists:foldl(fun(X, {SumIter, SqrSumIter}) -> {X + SumIter, X * X + SqrSumIter} end,
-                                {0, 0}, NumbersList),
-    math:sqrt((SqrSum * N - Sum * Sum) / (N * (N - 1))).
+    try
+        N = length(NumbersList),
+        {Sum, SqrSum} = lists:foldl(fun(X, {SumIter, SqrSumIter}) -> {X + SumIter, X * X + SqrSumIter} end,
+                                    {0, 0}, NumbersList),
+        math:sqrt((SqrSum * N - Sum * Sum) / (N * (N - 1)))
+    catch
+        error:Error -> {error, Error}
+    end.
     
 
 %%-------------------------------------------------------------------
