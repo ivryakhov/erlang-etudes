@@ -1,0 +1,8 @@
+-record(calls, {
+                phone_number,
+                starting_date,
+                starting_time,
+                end_date,
+                end_time
+               }).
+        
