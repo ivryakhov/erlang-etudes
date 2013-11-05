@@ -6,3 +6,10 @@
                 end_time
                }).
         
+-record(customers, {
+                    phone_number,
+                    last_name,
+                    first_name,
+                    middle_name,
+                    raite_paid
+                   }).
