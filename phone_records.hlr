@@ -1,4 +1,4 @@
--record(calls, {
+-record(phone_calls, {
                 phone_number,
                 starting_date,
                 starting_time,
@@ -11,5 +11,5 @@
                     last_name,
                     first_name,
                     middle_name,
-                    raite_paid
+                    rate_paid
                    }).
