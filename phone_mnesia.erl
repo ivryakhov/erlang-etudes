@@ -1,8 +1,25 @@
+%%%-------------------------------------------------------------------
+%%% @author Ryakhov Ivan <ivryakhov@gmail.com>
+%%% @copyright 2013
+%%% @doc 'Etudes for Erlang' exercises. Etude 10-2: Using Mnesia
+%%%       [http://chimera.labs.oreilly.com/books/1234000000726]
+%%% @end
+%%%-------------------------------------------------------------------
 -module(phone_mnesia).
 -include("phone_records.hlr").
 -include_lib("stdlib/include/qlc.hrl").
 -export([setup/2, summary/3]).
 
+%%-------------------------------------------------------------------
+%% API
+%%-------------------------------------------------------------------
+
+%%-------------------------------------------------------------------
+%% @doc Reads the .csv files with records data, creates the mnesia 
+%%      tables and fills them with file's data.
+%% @spec setup(string(), string()) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 setup(CallsData, CustomersData) ->
     mnesia:delete_schema([node()]),
     mnesia:create_schema([node()]),
@@ -10,6 +27,13 @@ setup(CallsData, CustomersData) ->
     fill_table(phone_calls, CallsData, record_info(fields, phone_calls), bag),
     fill_table(customers, CustomersData, record_info(fields, customers), set).
 
+
+%%-------------------------------------------------------------------
+%% @doc Produes a tuple that contains the person's phone number,
+%%      total number of minutes and total cost for those minutes
+%% @spec summary(string(), string(), string()) -> tuple(string(), integer(), float())
+%% @end
+%%-------------------------------------------------------------------
 summary(LastName, FirstName, MiddleName) ->
     Query1 = qlc:q([Customer ||
                 Customer <- mnesia:table(customers),
@@ -32,6 +56,17 @@ summary(LastName, FirstName, MiddleName) ->
       TotalMinutes,
       TotalMinutes * RatePaid}].
 
+
+
+%%-------------------------------------------------------------------
+%% Internal functions
+%%-------------------------------------------------------------------
+
+%%-------------------------------------------------------------------
+%% @doc Calculates the number of minutes in list for one phone number
+%% @spec subtotal(list(record()), integer()) -> integer()
+%% @end
+%%-------------------------------------------------------------------
 subtotal(Item, Accumulator) ->
     StartSeconds = calendar:datetime_to_gregorian_seconds(
             {string_to_tuple(Item#phone_calls.starting_date),
@@ -39,7 +74,13 @@ subtotal(Item, Accumulator) ->
     EndSeconds = calendar:datetime_to_gregorian_seconds(
                 {string_to_tuple(Item#phone_calls.end_date),string_to_tuple(Item#phone_calls.end_time)}),
     Accumulator + ((EndSeconds - StartSeconds + 59) div 60).
+
     
+%%-------------------------------------------------------------------
+%% @doc Makes a transaction of Query and handles aborting cases
+%% @spec make_transaction(query_handle()) -> record()
+%% @end
+%%-------------------------------------------------------------------
 make_transaction(Query) ->
     Fun = fun() -> qlc:e(Query) end,
     case mnesia:transaction(Fun) of
@@ -49,6 +90,12 @@ make_transaction(Query) ->
             Res
     end.
 
+
+%%-------------------------------------------------------------------
+%% @doc Fills a mnesia table with data from files
+%% @spec fill_table(atom(), string(), atrribute(), atom()) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 fill_table(TableName, FileToRead, RecordInfo, TableType) ->
     mnesia:delete_table(TableName),
     mnesia:create_table(TableName, [{attributes, RecordInfo}, {type, TableType}]),
@@ -67,6 +114,12 @@ fill_table(TableName, FileToRead, RecordInfo, TableType) ->
             {error, Why}
     end.
 
+
+%%-------------------------------------------------------------------
+%% @doc Reads a file line by line and assemble a list of records fileds
+%% @spec subtotal(atom(), io:device(), list(tuple())) -> atom()
+%% @end
+%%-------------------------------------------------------------------
 process_file(TableName, FileName, ResultList) ->
     Line = io:get_line(FileName, ""),
     case Line of
