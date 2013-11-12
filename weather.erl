@@ -35,10 +35,25 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Gets a weather report for "NNNN" station code
+%%
+%% @spec reposrt(string()) -> list() | {error, 404}
+%% @end
+%%--------------------------------------------------------------------
 report(StationCode) ->
     gen_server:call(?MODULE, StationCode).
 
-recent() -> gen_server:cast(?MODULE, "").
+%%--------------------------------------------------------------------
+%% @doc
+%% Gets a list of recently used stations
+%%
+%% @spec recent() -> list()
+%% @end
+%%--------------------------------------------------------------------
+recent() ->
+    gen_server:cast(?MODULE, "").
 
 %%%===================================================================
 %%% gen_server callbacks
