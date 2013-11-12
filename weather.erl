@@ -1,7 +1,8 @@
 %%%-------------------------------------------------------------------
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
-%%% @doc 'Etudes for Erlang' exercises. Etude 11-1: Get the Weather
+%%% @doc 'Etudes for Erlang' exercises. Etude 11-1: Get the Weather,
+%%%       Étude 11-2: Wrapper Functions
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
@@ -12,6 +13,7 @@
 
 %% API
 -export([start_link/0]).
+-export([report/1, recent/0]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -33,6 +35,11 @@
 start_link() ->
     gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
+report(StationCode) ->
+    gen_server:call(?MODULE, StationCode).
+
+recent() -> gen_server:cast(?MODULE, "").
+
 %%%===================================================================
 %%% gen_server callbacks
 %%%===================================================================
@@ -49,7 +56,8 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 init([]) ->
-    {ok, inets:start()}.
+    inets:start(),
+    {ok, []}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -79,7 +87,7 @@ handle_call(Request, _From, State) ->
                     Reply = analyze_info(XmlContent)
             end
     end,
-    {reply, Reply, State}.
+    {reply, Reply, [Request | lists:sublist(State, 10)]}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -92,6 +100,7 @@ handle_call(Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast(_Msg, State) ->
+    io:format("Most recent requests: ~p~n", [State]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
