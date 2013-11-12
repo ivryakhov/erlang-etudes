@@ -4,7 +4,6 @@
 %%% @doc 'Etudes for Erlang' exercises. Etude 11-1: Get the Weather
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
-%%% Created : 26 May 2013 by some name <me@hostname.local>
 %%%-------------------------------------------------------------------
 -module(weather).
 
@@ -68,8 +67,18 @@ init([]) ->
 %%--------------------------------------------------------------------
 handle_call(Request, _From, State) ->
     Url = "http://w1.weather.gov/xml/current_obs/" ++ Request ++ ".xml",
-    {ok, {_Code, _Header, XmlContent}} = httpc:request(Url),
-    Reply = analyze_info(XmlContent),
+    {Result, Info} = httpc:request(Url),
+    case Result of
+        error -> Reply = {Result, Info};
+        ok ->
+            {{_HttpVer, Code, _CodeMess}, _Header, XmlContent} = Info,
+            case Code of
+                404 ->
+                    Reply = {error, 404};
+                200 ->
+                    Reply = analyze_info(XmlContent)
+            end
+    end,
     {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
@@ -110,6 +119,7 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 terminate(_Reason, _State) ->
+    inets:stop(),
     ok.
 
 %%--------------------------------------------------------------------
