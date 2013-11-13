@@ -2,7 +2,7 @@
 %%% @author Ryakhov Ivan <ivryakhov@gmail.com>
 %%% @copyright 2013
 %%% @doc 'Etudes for Erlang' exercises. Etude 11-1: Get the Weather,
-%%%       Étude 11-2: Wrapper Functions
+%%%       Etude 11-2: Wrapper Functions, Etude 11-3: Independent Server and Client
 %%%       [http://chimera.labs.oreilly.com/books/1234000000726]
 %%% @end
 %%%-------------------------------------------------------------------
@@ -13,7 +13,7 @@
 
 %% API
 -export([start_link/0]).
--export([report/1, recent/0]).
+-export([report/1, recent/0, connect/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -33,7 +33,7 @@
 %% @end
 %%--------------------------------------------------------------------
 start_link() ->
-    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link({global, ?SERVER}, ?MODULE, [], []).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -43,7 +43,7 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 report(StationCode) ->
-    gen_server:call(?MODULE, StationCode).
+    gen_server:call({global, ?MODULE}, StationCode).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -53,7 +53,24 @@ report(StationCode) ->
 %% @end
 %%--------------------------------------------------------------------
 recent() ->
-    gen_server:cast(?MODULE, "").
+    gen_server:call({global, ?MODULE}, recent).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Attempts to contact the server
+%%
+%% @spec connect(string()) -> atom()
+%% @end
+%%--------------------------------------------------------------------
+connect(ServerNodeName) ->
+    case net_adm:ping(ServerNodeName) of
+        pong ->
+            io:format("Connected to server.~n"),
+            ok;
+        pang ->
+            io:format("Not connected to server.~n"),
+            nok
+    end.
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -88,6 +105,8 @@ init([]) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
+handle_call(recent,  _From, State) ->
+    {reply, State, State};
 handle_call(Request, _From, State) ->
     Url = "http://w1.weather.gov/xml/current_obs/" ++ Request ++ ".xml",
     {Result, Info} = httpc:request(Url),
@@ -115,7 +134,6 @@ handle_call(Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 handle_cast(_Msg, State) ->
-    io:format("Most recent requests: ~p~n", [State]),
     {noreply, State}.
 
 %%--------------------------------------------------------------------
