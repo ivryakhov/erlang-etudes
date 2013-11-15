@@ -10,7 +10,8 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, get_chat_node/0, login/1, logout/0]).
+-export([start_link/1, get_chat_node/0, login/1, logout/0, 
+         say/1, users/0, who/2, set_profile/2]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -39,7 +40,7 @@ start_link(ChatRoom) ->
 %% @doc
 %% Gets the name of the chatroom node
 %%
-%% @spec get_chat_node() -> string()
+%% @spec get_chat_node() -> atom()
 %% @end
 %%--------------------------------------------------------------------
 get_chat_node() ->
@@ -49,21 +50,62 @@ get_chat_node() ->
 %% @doc
 %% Sends a call to the chatroom node with login request
 %%
-%% @spec login(string()) -> string()
+%% @spec login(string()) -> {atom(), string()}
 %% @end
 %%--------------------------------------------------------------------
 login(UserName) ->
-    gen_server:call({?CHATROOM, get_chat_node()}, {login, UserName, node()}).
+    gen_server:call(?SERVER, {login, UserName}).
 
 %%--------------------------------------------------------------------
 %% @doc
 %% Sends a call to the chatroom node with logout request
 %%
-%% @spec login(string()) -> string()
+%% @spec logout() -> {atom(), string()}
 %% @end
 %%--------------------------------------------------------------------
 logout() ->
-    gen_server:call({?CHATROOM, get_chat_node()}, logout).
+    gen_server:call(?SERVER, logout).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Sends a call to the chatroom node with logout request
+%%
+%% @spec say(string()) -> atom()
+%% @end
+%%--------------------------------------------------------------------
+say(Text) ->
+    gen_server:call(?SERVER, {say, Text}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Sends a call to the chatroom node to get list of users
+%%
+%% @spec users() -> list()
+%% @end
+%%--------------------------------------------------------------------
+users() ->
+    gen_server:call({?CHATROOM, get_chat_node()}, users).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Sends a call to the chatroom node to get profile of the user
+%%
+%% @spec who(string(), atom()) -> list() | {atom(), string()}
+%% @end
+%%--------------------------------------------------------------------
+who(UserName, UserNode) ->
+    gen_server:call({?CHATROOM, get_chat_node()}, {who, UserName, UserNode}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Sends a call to the chatroom node to get profile of the user
+%%
+%% @spec login(string()) -> list()
+%% @end
+%%--------------------------------------------------------------------
+set_profile(Key, Value) ->
+    gen_server:call(?SERVER, {set_profile, Key, Value}).
+
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -101,9 +143,11 @@ init(ChatRoom) ->
 handle_call(get_chat_node, _From, State) ->
     Reply = State#state.chat_node,
     {reply, Reply, State};
+
 handle_call(get_profile, _From, State) ->
     Reply = State#state.profile,
     {reply, Reply, State};
+
 handle_call({set_profile, Key, Value}, _From, State) ->
     Profile = case lists:keymember(Key, 1, State#state.profile) of
         true ->
@@ -112,7 +156,21 @@ handle_call({set_profile, Key, Value}, _From, State) ->
             State#state.profile ++ [{Key, Value}]
     end,
     NewState = #state{chat_node = State#state.chat_node, profile = Profile},
-    {reply, Profile, NewState}.
+    {reply, Profile, NewState};
+
+handle_call({login, UserName}, _From, State) ->
+    Reply = gen_server:call({?CHATROOM, State#state.chat_node}, {login, UserName, node()}),
+    {reply, Reply, State};
+
+handle_call(logout, _From, State) ->
+    Reply = gen_server:call({?CHATROOM, State#state.chat_node}, logout),
+    {reply, Reply, State};
+
+handle_call({say, Text}, _From, State) ->
+    Reply = gen_server:call({?CHATROOM, State#state.chat_node}, {say, Text}),
+    {reply, Reply, State};
+
+handle_call(_, _From, State) -> {ok, [], State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -124,7 +182,8 @@ handle_call({set_profile, Key, Value}, _From, State) ->
 %%                                  {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_cast(_Msg, State) ->
+handle_cast(Msg, State) ->
+    io:format(Msg),
     {noreply, State}.
 
 %%--------------------------------------------------------------------

@@ -17,6 +17,7 @@
 	 terminate/2, code_change/3]).
 
 -define(SERVER, ?MODULE). 
+-define(PERSON, person).
 
 %%%===================================================================
 %%% API
@@ -75,7 +76,7 @@ handle_call({login, UserName, ServerName}, From, State) ->
                 _ ->
                     NewState = State,
                     Reply = {nok, "User " ++ UserName ++ " from "
-                             ++ " sserver is already logged in."}
+                             ++ ServerName ++ " server is already logged in."}
             end;
         _ ->
             NewState = State,
@@ -87,17 +88,46 @@ handle_call(logout, From, State) ->
     {Pid, _Ref} = From,
     case lists:keyfind(Pid, 2, State) of
         false ->
-            Reply = {nok, "You are not logged in"},
+            Reply = {nok, "You are not logged in."},
             NewState = State;
         _ ->
             NewState = lists:keydelete(Pid, 2, State),
-            Reply = {ok, "Logged out"}
+            Reply = {ok, "Logged out."}
     end,
     {reply, Reply, NewState};
 
 handle_call(users, _From, State) ->
     Reply = State,
-    {reply, Reply, State}.
+    {reply, Reply, State};
+
+handle_call({say, Text}, From, State) ->
+    {Pid, _Ref} = From,
+    Reply = case lists:keymember(Pid, 2, State) of
+        true ->
+            {{UserName, UserServer}, _Pid} = lists:keyfind(Pid, 2, State),
+            Message = UserName ++ " (" ++ atom_to_list(UserServer) ++ ") says: "
+                      ++ "\"" ++ Text ++ "\"~n",
+            [gen_server:cast({?PERSON, SenderServer}, Message) ||
+                {{SenderName, SenderServer}, _} <- State, SenderName /= UserName],
+            ok;
+        false ->
+            {nok, "You are not logged in."}
+    end,
+    {reply, Reply, State};
+
+handle_call({who, Person, ServerName}, _From, State) ->
+    Reply = case lists:keymember({Person, ServerName}, 1, State) of
+        true ->
+            gen_server:call({?PERSON, ServerName}, get_profile);
+        false ->
+            {nok, "No such user"}
+    end,
+    {reply, Reply, State};
+
+handle_call(Request, _From, State) ->
+    {ok, {error, "Unhandled Request", Request}, State}.
+
+
 %%--------------------------------------------------------------------
 %% @private
 %% @doc
